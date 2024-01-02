@@ -1,90 +1,95 @@
-import React, { FC, createContext, useContext, useMemo } from 'react'
-import { useForm, FieldValues } from 'react-hook-form'
+import React, { createContext, FC, useContext, useMemo } from "react";
+import { FieldValues, useForm } from "react-hook-form";
 
-import { FormContextProps, JSONFormContextValues } from './types'
+import { FormContextProps, JSONFormContextValues } from "./types";
 import {
-  getObjectFromForm,
   getIdSchemaPairs,
-  resolveRefs,
-} from '../JSONSchema/logic'
+  getObjectFromForm,
+  resolveRefs
+} from "../JSONSchema/logic";
 
 export const InternalFormContext = createContext<JSONFormContextValues | null>(
   null
-)
+);
 
 export function useFormContext<
   T extends FieldValues = FieldValues
 >(): JSONFormContextValues<T> {
-  return useContext(InternalFormContext) as JSONFormContextValues<T>
+  return useContext(InternalFormContext) as JSONFormContextValues<T>;
 }
 
 export const FormContext: FC<FormContextProps> = props => {
   const {
+    children,
+    schema,
     formProps: userFormProps,
     onChange,
-    validationMode = 'onSubmit',
-    revalidateMode = 'onChange',
+    onSubmit,
+    validationMode = "onSubmit",
+    revalidateMode = "onChange",
+    customValidators,
+    noNativeValidate,
     submitFocusError = true,
-    defaultValues,
-  } = props
+    defaultValues
+  } = props;
 
   const methods = useForm({
     defaultValues,
     mode: validationMode,
     reValidateMode: revalidateMode,
-    submitFocusError: submitFocusError,
-  })
+    submitFocusError: submitFocusError
+  });
 
-  const isFirstRender = React.useRef(true)
+  const isFirstRender = React.useRef(true);
 
-  if (typeof onChange === 'function') {
-    const watchedInputs = methods.watch()
+  if (typeof onChange === "function") {
+    const watchedInputs = methods.watch();
 
     if (isFirstRender.current === false) {
-      onChange(getObjectFromForm(props.schema, watchedInputs))
+      onChange(getObjectFromForm(schema, watchedInputs));
     }
   }
 
-  const idMap = useMemo(() => getIdSchemaPairs(props.schema), [props.schema])
+  const idMap = useMemo(() => getIdSchemaPairs(schema), [schema]);
 
-  const resolvedSchemaRefs = useMemo(
-    () => resolveRefs(props.schema, idMap, []),
-    [props.schema, idMap]
-  )
+  const resolvedSchemaRefs = useMemo(() => resolveRefs(schema, idMap, []), [
+    schema,
+    idMap
+  ]);
 
   const formContext: JSONFormContextValues = useMemo(() => {
     return {
       ...methods,
       schema: resolvedSchemaRefs,
       idMap: idMap,
-      customValidators: props.customValidators,
-    }
-  }, [methods, resolvedSchemaRefs, idMap, props.customValidators])
+      customValidators: customValidators
+    };
+  }, [methods, resolvedSchemaRefs, idMap, customValidators]);
 
-  const formProps: React.ComponentProps<'form'> = { ...userFormProps }
+  const formProps: React.ComponentProps<"form"> = { ...userFormProps };
 
   formProps.onSubmit = methods.handleSubmit(async (data, event) => {
-    if (props.onSubmit) {
-      return props.onSubmit({
-        data: getObjectFromForm(props.schema, data),
+    if (onSubmit) {
+      return onSubmit({
+        data: getObjectFromForm(schema, data),
         event: event,
-        methods: formContext,
-      })
+        methods: formContext
+      });
     }
-    return
-  })
+    return;
+  });
 
-  if (props.noNativeValidate) {
-    formProps.noValidate = props.noNativeValidate
+  if (noNativeValidate) {
+    formProps.noValidate = noNativeValidate;
   }
 
   if (isFirstRender.current === true) {
-    isFirstRender.current = false
+    isFirstRender.current = false;
   }
 
   return (
     <InternalFormContext.Provider value={formContext}>
-      <form {...formProps}>{props.children}</form>
+      <form {...formProps}>{children}</form>
     </InternalFormContext.Provider>
-  )
-}
+  );
+};
