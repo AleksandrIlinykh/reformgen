@@ -1,5 +1,5 @@
 {
-  "name": "react-hook-form-jsonschema",
+  "name": "reformgen",
   "version": "0.2.0",
   "description": "Wrapper arround react-hook-form to create forms from a JSON schema.",
   "main": "output/index.cjs.js",
@@ -8,7 +8,7 @@
   "files": [
     "output"
   ],
-  "author": "Helena Steck <helena.steck@vtex.com.br>",
+  "author": "Aleksandr Ilinykh <aleksandrilinykhdev@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^11.0.1",
@@ -42,6 +42,7 @@
     "build:watch": "rollup -cw",
     "test": "vtex-test-tools test",
     "test:watch": "vtex-test-tools test --watch",
+    "test:coverage": "vtex-test-tools test --coverage",
     "lint": "tsc --noEmit && eslint --quiet --fix --ext ts,tsx src/",
     "prepublishOnly": "run-s lint test build"
   },
